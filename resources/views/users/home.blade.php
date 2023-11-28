@@ -4,7 +4,21 @@
 
 @section('content')
 <div class="row gx-5">
+    {{-- message for edit comment --}}
+    @if (session('success'))
+        <div class="bg-success-light p-3 mb-3 rounded">{{ session('success') }}</div>
+        {{ session()->forget('success') }}
+    @endif
+    @error('edit_comment' . "*")
+        <div class="bg-danger-light p-3 mb-3 rounded">{{ $message }}</div>
+    @enderror
+
     <div class="col-8">
+        @if (request()->is('*/category'))
+            <div class="badge bg-secondary bg-opacity-50 fs-5 mb-3">{{ $category_name }}
+                <a href="{{ route('index') }}" class="text-decoration-none text-white">&nbsp;<i class="fa-solid fa-xmark"></i></a>
+            </div>
+        @endif
         @forelse ($home_posts as $post)
             <div class="card mb-4">
                 {{-- title --}}

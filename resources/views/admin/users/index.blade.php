@@ -4,14 +4,37 @@
 
 @section('content')
 
-    <table class="table table-hover align-middle bg-white border text-secondary">
+    <form action="{{ route('admin.search') }}" style="width: 300px;" >
+        @if (request()->is('admin/users/search*'))
+            <input type="search" name="search" id="search" class="form-control form-control-sm" placeholder="Search..." value="{{ $search }}">
+        @else
+            <input type="search" name="search" id="search" class="form-control form-control-sm" placeholder="Search...">
+        @endif
+    </form>
+
+    <table class="table table-hover align-middle bg-white border text-secondary mt-2">
         <thead class="small table-success text-secondary">
             <tr>
                 <th></th>
                 <th>NAME</th>
                 <th>EMAIL</th>
                 <th>CREATED_AT</th>
-                <th>STATUS</th>
+                <th>
+                    <div class="d-flex">
+                        STATUS
+                        <a href="{{ route('admin.users.sort', isset($user_status) ? $user_status : 1) }}" class="ms-auto text-decoration-none">
+                            @if (isset($user_status))
+                                @if ($user_status == 1)
+                                    <i class="fa-solid fa-caret-down fs-5 text-success"></i>
+                                @else
+                                    <i class="fa-solid fa-caret-up fs-5 text-success"></i>
+                                @endif
+                            @else
+                                <i class="fa-solid fa-caret-down fs-5 text-dark"></i>
+                            @endif
+                        </a>
+                    </div>
+                </th>
                 <th></th>
             </tr>
         </thead>
@@ -69,7 +92,11 @@
         </tbody>
     </table>
     <div class="d-flex justify-content-center">
+    @if (request()->is('admin/users/search*'))
+        {{ $all_users->appends(['search' => $search])->links() }}
+    @else
         {{ $all_users->links() }}
+    @endif
     </div>
 
 @endsection

@@ -16,6 +16,7 @@
             <div class="col-auto p-2">
                 @if (Auth::user()->id === $user->id)
                     <a href="{{ route('profile.edit') }}" class="btn btn-outline-secondary btn-sm fw-bold">Edit Profile</a>
+                    <a href="{{ route('profile.edit_pass') }}" class="btn btn-outline-secondary btn-sm fw-bold">Update Password</a>
                 @else
                     @if ($user->isFollowed())
                         <form action="{{ route('follow.destroy', $user->id) }}" method="post" class="d-inline">
@@ -49,6 +50,13 @@
                     <strong>{{ $user->following->count() }}</strong> following
                 </a>
             </div>
+            @if (Auth::user()->id === $user->id)
+                <div class="col-auto">
+                    <a href="{{ route('bookmark') }}" class="text-decoration-none text-dark">
+                        <strong>{{ count($bookmarked_posts) }}</strong> {{ (count($bookmarked_posts) == 1) ? "bookmark" : "bookmarks" }}
+                    </a>
+                </div>
+            @endif
         </div>
 
         <p class="fw-bold">{{ $user->introduction }}</p>

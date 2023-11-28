@@ -13,6 +13,14 @@
         top: 65px;
     }
 </style>
+    {{-- message for edit comment --}}
+    @if (session('success'))
+        <div class="bg-success-light p-3 mb-3 rounded">{{ session('success') }}</div>
+        {{ session()->forget('success') }}
+    @endif
+    @error('edit_comment' . "*")
+        <div class="bg-danger-light p-3 mb-3 rounded">{{ $message }}</div>
+    @enderror
 
     <div class="row border shadow">
         <div class="col p-0 border-end">
@@ -74,7 +82,8 @@
 
                 <div class="card-body w-100">
                     <div class="row align-items-center">
-                        <div class="col-auto">
+                        {{-- icons --}}
+                        <div class="col-auto pe-1">
                             @if ($post->isLiked())
                                 <form action="{{ route('like.destroy', $post->id) }}" method="post">
                                     @csrf
@@ -96,10 +105,41 @@
                         <div class="col-auto px-0">
                             <span>{{ $post->likes->count() }}</span>
                         </div>
-                        <div class="col text-end">
+
+                        <div class="col-auto pe-1">
+                            <button type="button" class="btn btn-sm shadow-none p-0">
+                                <i class="fa-regular fa-comment"></i>
+                            </button>
+                        </div>
+                        <div class="col-auto px-0">
+                            <span>{{ $post->comments->count() }}</span>
+                        </div>
+
+                        <div class="col-auto">
+                            @if ($post->isBookmarked())
+                                <form action="{{ route('bookmark.destroy', $post->id) }}" method="post">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit" class="btn btn-sm p-0">
+                                        <i class="fa-solid fa-bookmark text-success"></i>
+                                    </button>
+                                </form>
+                            @else
+                                <form action="{{ route('bookmark.store', $post->id) }}" method="post">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm shadow-none p-0">
+                                        <i class="fa-regular fa-bookmark"></i>
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+
+                        {{-- user info --}}
+                        <div class="col text-end mt-2">
                             @forelse ($post->categoryPost as $category_post)
                                 <div class="badge bg-secondary bg-opacity-50">
-                                    {{ $category_post->category->name }}
+                                    <a href="{{ route('category', $category_post->category->id) }}" class="text-decoration-none text-white">{{ $category_post->category->name }}</a>
                                 </div>
                             @empty
                                 <div class="badge bg-dark text-wrap">Uncategorized</div>
@@ -113,7 +153,7 @@
                     <p class="text-uppercase text-muted xsmall">{{ date('M d, Y', strtotime($post->created_at)) }}</p>
                 
                     <div class="mt-2">
-                        <form action="{{ route('comment.store', $post->id) }}" method="post">
+                        <form action="{{ route('comment.store', ['post_id' => $post->id, 'comment_id' => 0]) }}" method="post">
                             @csrf
 
                             <div class="input-group">
@@ -128,23 +168,14 @@
                         {{-- comments --}}
                         @if ($post->comments->isNotEmpty())
                             <ul class="list-group mt-3">
-                                @foreach ($post->comments as $comment)
-                                    <li class="list-group-item border-0 p-0 mb-2">
-                                        <a href="{{ route('profile.show', $comment->user->id) }}" class="text-decoration-none text-dark fw-bold">{{ $comment->user->name }}</a>
-                                        &nbsp;
-                                        <p class="d-inline fw-light">{{ $comment->body }}</p>
-
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <span class="text-uppercase text-muted xsmall">{{ date('M d, Y', strtotime($comment->created_at)) }}</span>
-
-                                        @if (Auth::user()->id === $comment->user->id)
-                                            &middot;
-                                            <button type="button" class="border-0 bg-transparent text-danger p-0" data-bs-toggle="modal" data-bs-target="#delete-comment-{{$comment->id}}">Delete</button>
-                                            @include('users.posts.contents.modals.delete_comment')
-                                        @endif
-                                    </li>
+                                {{-- parent comments --}}
+                                @foreach ($post->comments->where('parent_msg_id', 0) as $comment)
+                                    @include('users.posts.contents.comment_list') 
+                                    
+                                    {{-- child comments --}}
+                                    @foreach ($post->comments->where('parent_msg_id', $comment->id) as $comment)
+                                        @include('users.posts.contents.comment_list')
+                                    @endforeach
                                 @endforeach
                             </ul>
                         @endif
@@ -152,6 +183,11 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="mt-4 text-end">
+        @error('edit_comment' . $post->id)
+            <div class="text-danger small">{{ $message }}</div>
+        @enderror
     </div>
 
 @endsection

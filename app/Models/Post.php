@@ -35,4 +35,14 @@ class Post extends Model
     {
         return $this->likes()->where('user_id', Auth::user()->id)->exists();
     }
+
+    public function bookmarks()
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function isBookmarked()
+    {
+        return $this->bookmarks()->where('user_id', Auth::user()->id)->exists();
+    }
 }

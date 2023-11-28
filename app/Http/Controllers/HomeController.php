@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Post;
 use App\Models\User;
+use App\Models\Category;
 
 class HomeController extends Controller
 {
@@ -16,12 +17,14 @@ class HomeController extends Controller
      */
     private $post;
     private $user;
+    private $category;
 
-    public function __construct(Post $post, User $user)
+    public function __construct(Post $post, User $user, Category $category)
     {
         // $this->middleware('auth');
         $this->post = $post;
         $this->user = $user;
+        $this->category = $category;
     }
 
     /**
@@ -34,7 +37,6 @@ class HomeController extends Controller
         // $all_posts = $this->post->latest()->get();
         $home_posts = $this->getHomePosts();
         $suggested_users = $this->getSuggestedUsers(5);
-
         return view('users.home')->with('home_posts', $home_posts)
                                     ->with('suggested_users', $suggested_users);
     }
@@ -45,7 +47,8 @@ class HomeController extends Controller
         $home_posts = [];   // in case the home_posts is empty, it will not return null, but emppty insteasd
 
         foreach ($all_posts as $post) {
-            if ($post->user->isFollowed() || $post->user->id === Auth::user()->id) {
+            if (($post->user->isFollowed() || $post->user->id === Auth::user()->id)
+                && (!$post->user->trashed())) {
                 $home_posts[] = $post;
             }
         }
@@ -90,5 +93,34 @@ class HomeController extends Controller
     {
         $suggested_users = $this->getSuggestedUsers(0);
         return view('users.suggestions')->with('suggested_users', $suggested_users);
+    }
+
+
+    private function getCategoryPosts($category_id)
+    {
+        $all_posts = $this->post->latest()->get();
+        $home_posts = [];
+
+        foreach ($all_posts as $post) {
+            foreach ($post->categoryPost as $category_post) {
+            if (($category_post->category->id == $category_id)
+                && (!$post->user->trashed())) {
+                    $home_posts[] = $post;
+                }
+            }
+        }
+ 
+        return $home_posts;
+    }
+
+    public function category($category_id)
+    {
+        $home_posts = $this->getCategoryPosts($category_id);
+        $suggested_users = $this->getSuggestedUsers(5);
+        $category = $this->category->findOrFail($category_id);
+
+        return view('users.home')->with('home_posts', $home_posts)
+                                    ->with('suggested_users', $suggested_users)
+                                    ->with('category_name', $category->name);
     }
 }

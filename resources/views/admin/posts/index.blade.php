@@ -12,7 +12,22 @@
                 <th>CATEGORY</th>
                 <th>OWNER</th>
                 <th>CREATED_AT</th>
-                <th>STATUS</th>
+                <th>
+                    <div class="d-flex">
+                        STATUS
+                        <a href="{{ route('admin.posts.sort', isset($post_status) ? $post_status : 1) }}" class="ms-auto text-decoration-none">
+                            @if (isset($post_status))
+                                @if ($post_status == 1)
+                                    <i class="fa-solid fa-caret-down fs-5 text-primary"></i>
+                                @else
+                                    <i class="fa-solid fa-caret-up fs-5 text-primary"></i>
+                                @endif
+                            @else
+                                <i class="fa-solid fa-caret-down fs-5 text-dark"></i>
+                            @endif
+                        </a>
+                    </div>
+                </th>
                 <th></th>
             </tr>
         </thead>
@@ -29,7 +44,7 @@
                     {{-- category --}}
                     @forelse ($post->categoryPost as $category_post)
                         <div class="badge bg-secondary bg-opacity-50">
-                            {{ $category_post->category->name }}
+                            <a href="{{ route('category', $category_post->category->id) }}" class="text-decoration-none text-white">{{ $category_post->category->name }}</a>
                         </div>
                     @empty
                         <div class="badge bg-dark text-wrap">Uncategorized</div>
